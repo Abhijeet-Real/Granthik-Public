@@ -1,0 +1,79 @@
+### Upload Document
+POST http://localhost:8802/documents
+Content-Type: multipart/form-data
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< ./sample.pdf
+--boundary
+Content-Disposition: form-data; name="uploaded_by"
+
+admin
+--boundary--
+
+### Trigger OCR
+POST http://localhost:8802/ocr/process
+Content-Type: application/json
+
+{
+  "filepath": "uploaded_docs/sample.pdf"
+}
+
+### Chunk OCR Output
+POST http://localhost:8802/chunk
+Content-Type: application/json
+
+{
+  "text": "Sample document text here",
+  "chunk_size": 1000,
+  "chunk_overlap": 200
+}
+
+### Store in VectorDB
+POST http://localhost:8802/vectorstore/store
+Content-Type: application/json
+
+{
+  "docs": ["This is chunk 1", "This is chunk 2"],
+  "metadatas": [{"source": "doc1"}, {"source": "doc1"}]
+}
+
+### Query VectorDB
+POST http://localhost:8802/vectorstore/query
+Content-Type: application/json
+
+{
+  "query": "What is the document about?"
+}
+
+### Summarize OCR JSON
+POST http://localhost:8802/summarize
+Content-Type: application/json
+
+{
+  "ocr_file_path": "path/to/ocr_output.json",
+  "mode": "brief"
+}
+
+### Chatbot (RAG)
+POST http://localhost:8802/chat/rag
+Content-Type: application/json
+
+{
+  "question": "Summarize the uploaded file"
+}
+
+### Admin - Create User
+POST http://localhost:8802/admin/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "role": "user"
+}
+
+### Admin - List Groups
+GET http://localhost:8802/admin/groups

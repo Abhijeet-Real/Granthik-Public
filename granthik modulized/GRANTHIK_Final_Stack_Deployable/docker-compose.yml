@@ -1,0 +1,63 @@
+version: '3.9'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8802:8802"
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ENV_FILE=.env
+      - UNSTRUCTURED_URL=http://host.docker.internal:9500/general/v0/general
+      - OLLAMA_URL=http://host.docker.internal:11434/api/generate
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8801:80"
+    restart: always
+
+
+  ldap-server:
+    image: osixia/openldap:1.5.0
+    container_name: ldap-server
+    environment:
+      - LDAP_ORGANISATION=GRANTHIK
+      - LDAP_DOMAIN=granthik.local
+      - LDAP_ADMIN_PASSWORD=admin
+    ports:
+      - "389:389"
+    restart: always
+
+  ldap-admin:
+    image: osixia/phpldapadmin:0.9.0
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=ldap-server
+    ports:
+      - "6443:443"
+    restart: always
+    depends_on:
+      - ldap-server
+
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: granthik
+      POSTGRES_USER: granthik_admin
+      POSTGRES_PASSWORD: granthik_pass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
